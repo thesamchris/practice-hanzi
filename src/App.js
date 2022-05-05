@@ -20,26 +20,41 @@ class App extends React.Component{
 
   togglePractice() {
     const { isPracticing } = this.state;
-    if (isPracticing) {
-      return this.setState({
-        isPracticing: false
-      });
-    } 
+    this.setState({
+        isPracticing: !isPracticing
+    });
 
     this.practice();
   }
 
+  makeList() {
+    let { text } = this.state;
+    let words = text.split("");
+    return words;
+  }
+
+  getRandomIndex(min, max) {
+    return Math.floor(Math.random() * (max - min) ) + min;
+  }
+
+
   practice() {
 
-    this.setState({
-      isPracticing: true
-    });
 
-    let { text } = this.state
-    let u = new SpeechSynthesisUtterance();
-    u.text = text;
-    u.lang = "zh";
-    speechSynthesis.speak(u);
+    let { number: numberOfIterations } = this.state;
+    let characters = this.makeList();
+    // TODO: Wait for longer time before reading next character
+    // TODO: Pause and pick up from where it left off when resuming
+    // TODO: Mode where, first round bring up ALL characters in random order, then randomise for iterations
+    // TODO: First time, "Hi i am Hana, let's start practicing!"
+    for (let i = 0; i < numberOfIterations; i++) {
+      let u = new SpeechSynthesisUtterance();
+      let randomWord = characters[this.getRandomIndex(0, characters.length)] 
+      u.text = randomWord;
+      u.lang = "zh";
+      speechSynthesis.speak(u);
+    }
+
   }
 
   handleInput(input) {
