@@ -1,5 +1,7 @@
 import React from 'react';
 import './App.css';
+import Continuous from './components/tests/continuous';
+import PlayPauseTest from './components/tests/playpausetest';
 
 class App extends React.Component{
   constructor() {
@@ -10,12 +12,37 @@ class App extends React.Component{
       charactersInput: "", 
       iterationsInput: 0,
       text: "",
-      number: 0
+      number: 0,
+      delay: 5000,
+      sequence: [],
+      completedInitial: 0,
     };
 
     this.togglePractice = this.togglePractice.bind(this);
     this.handleInput = this.handleInput.bind(this);
     this.practice = this.practice.bind(this);
+    this.getCharacter = this.getCharacter.bind(this);
+  }
+
+  arraysMatch(arr1, arr2) {
+
+    // Check if the arrays are the same length
+    if (arr1.length !== arr2.length) return false;
+
+    // Check if all items exist and are in the same order
+    for (var i = 0; i < arr1.length; i++) {
+      if (arr1[i] !== arr2[i]) return false;
+    }
+
+    // Otherwise, return true
+    return true;
+
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (!this.arraysMatch(prevState.sequence, this.state.sequence) && this.state.isPracticing) {
+      this.practice();
+    }
   }
 
   togglePractice() {
@@ -37,24 +64,47 @@ class App extends React.Component{
     return Math.floor(Math.random() * (max - min) ) + min;
   }
 
+  timeout (ms) {
+    return new Promise(res => setTimeout(res,ms));
+  }
 
-  practice() {
+  getCharacter() {
+    let { sequence, text, completedInitial } = this.state;
 
+    if (sequence.length < 1 && !completedInitial) {
+      let characters = text.split('');
+      let current = characters.shift();
+      this.setState({
+        sequence: characters
+      });
 
-    let { number: numberOfIterations } = this.state;
-    let characters = this.makeList();
-    // TODO: Wait for longer time before reading next character
+      return current;
+
+    } else if (sequence.length < 1 && completedInitial) {
+      let characters = text.split('');
+      return characters[this.getRandomIndex(0, characters.length)];
+    }
+
+    if (sequence.length === 1 && !completedInitial) {
+      this.setState({
+        completedInitial: true
+      });
+    }
+
+    return sequence.shift();
+  }
+
+  async practice() {
+    let { delay } = this.state;
     // TODO: Pause and pick up from where it left off when resuming
     // TODO: Mode where, first round bring up ALL characters in random order, then randomise for iterations
     // TODO: First time, "Hi i am Hana, let's start practicing!"
-    for (let i = 0; i < numberOfIterations; i++) {
-      let u = new SpeechSynthesisUtterance();
-      let randomWord = characters[this.getRandomIndex(0, characters.length)] 
-      u.text = randomWord;
-      u.lang = "zh";
-      speechSynthesis.speak(u);
-    }
-
+    let u = new SpeechSynthesisUtterance();
+    // let randomWord = characters[this.getRandomIndex(0, characters.length)] 
+    u.text = this.getCharacter();
+    u.lang = "zh";
+    speechSynthesis.speak(u);
+    await this.timeout(delay);
   }
 
   handleInput(input) {
@@ -65,7 +115,8 @@ class App extends React.Component{
 
   render() {
     const { isPracticing, text, number } = this.state;
-
+    return  <PlayPauseTest />
+    return <Continuous />
     return (
       <div className="app">
   
